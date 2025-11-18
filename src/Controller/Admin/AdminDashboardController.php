@@ -24,7 +24,7 @@ class AdminDashboardController extends AbstractDashboardController
 
     public function index(): Response
     {
-        // Agora usamos $this->em
+        
         $postsCount = $this->em->getRepository(Post::class)->count([]);
         $commentsCount = $this->em->getRepository(Comment::class)->count([]);
         $latestPosts = $this->em->getRepository(Post::class)->findBy([], ['createdAt' => 'DESC'], 5);
