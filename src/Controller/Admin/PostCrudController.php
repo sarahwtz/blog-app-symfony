@@ -6,11 +6,12 @@ use App\Entity\Post;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
 use EasyCorp\Bundle\EasyAdminBundle\Field\IdField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
-use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;      
-use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;    
+use EasyCorp\Bundle\EasyAdminBundle\Field\TextEditorField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
+use EasyCorp\Bundle\EasyAdminBundle\Field\Field;
 
 class PostCrudController extends AbstractCrudController
 {
@@ -22,21 +23,25 @@ class PostCrudController extends AbstractCrudController
     public function configureFields(string $pageName): iterable
     {
         return [
-            IdField::new('id')->hideOnForm(),
+            IdField::new('id'),
             TextField::new('title'),
-            TextEditorField::new('content')->setNumOfRows(10),
-            ImageField::new('image')
-                ->setBasePath('/uploads/images')
-                ->setUploadDir('public/uploads/images')
-                ->setUploadedFileNamePattern('[randomhash].[extension]')
-                ->setRequired($pageName === Crud::PAGE_NEW),
-            DateTimeField::new('createdAt')->setFormat('yyyy-MM-dd HH:mm:ss')->hideOnForm(),
-            DateTimeField::new('updatedAt')->setFormat('yyyy-MM-dd HH:mm:ss')->hideOnForm(),
+
+            DateTimeField::new('createdAt')->hideOnForm(),
+            DateTimeField::new('updatedAt')->hideOnForm(),
             AssociationField::new('comments')->hideOnForm(),
+
+            // Conteúdo renderizado com Twig customizado
+            TextEditorField::new('content')
+                ->onlyOnIndex()
+                ->formatValue(function ($value, $entity) {
+                    return $this->renderView('admin/post_custom_index.html.twig', [
+                        'post' => $entity,
+                    ]);
+                }),
         ];
     }
 
-        public function createEntity(string $entityFqcn): Post
+    public function createEntity(string $entityFqcn): Post
     {
         $post = new Post();
         $post->setCreatedAt(new \DateTimeImmutable());
@@ -48,6 +53,4 @@ class PostCrudController extends AbstractCrudController
         $entityInstance->setUpdatedAt(new \DateTimeImmutable());
         parent::updateEntity($entityManager, $entityInstance);
     }
-
-    
 }
